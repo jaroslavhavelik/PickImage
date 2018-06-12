@@ -1,15 +1,11 @@
 package com.vansuita.pickimage.dialog;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 
 import com.vansuita.pickimage.bundle.PickSetup;
-import com.vansuita.pickimage.keep.Keep;
 import com.vansuita.pickimage.listeners.IPickCancel;
 import com.vansuita.pickimage.listeners.IPickClick;
 import com.vansuita.pickimage.listeners.IPickResult;
@@ -21,7 +17,6 @@ import static android.app.Activity.RESULT_OK;
 /**
  * Created by jrvansuita build 01/11/16.
  */
-
 public class PickImageDialog extends PickImageBaseDialog {
 
     public static PickImageDialog newInstance(PickSetup setup) {
@@ -62,12 +57,12 @@ public class PickImageDialog extends PickImageBaseDialog {
 
     @Override
     public void onCameraClick() {
-        launchCamera();
+        PickImageBaseDialogPermissionsDispatcher.launchCameraWithPermissionCheck(this);
     }
 
     @Override
     public void onGalleryClick() {
-        launchGallery();
+        PickImageBaseDialogPermissionsDispatcher.launchGalleryWithPermissionCheck(this);
     }
 
     @Override
@@ -81,13 +76,12 @@ public class PickImageDialog extends PickImageBaseDialog {
     }
 
     @Override
-  public PickImageDialog setOnPickCancel(IPickCancel onPickCancel)
-   {
-    return (PickImageDialog) super.setOnPickCancel(onPickCancel);
-   }
+    public PickImageDialog setOnPickCancel(IPickCancel onPickCancel) {
+        return (PickImageDialog) super.setOnPickCancel(onPickCancel);
+    }
 
 
-  @Override
+    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == IntentResolver.REQUESTER) {
@@ -102,56 +96,6 @@ public class PickImageDialog extends PickImageBaseDialog {
             }
         }
     }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode == IntentResolver.REQUESTER) {
-            boolean granted = true;
-
-            for (Integer i : grantResults)
-                granted = granted && i == PackageManager.PERMISSION_GRANTED;
-
-            if (granted) {
-                if (!launchSystemDialog()) {
-                    // See if the CAMERA permission is among the granted ones
-                    int cameraIndex = -1;
-                    for (int i = 0; i < permissions.length; i++) {
-                        if (permissions[cameraIndex].equals(Manifest.permission.CAMERA)) {
-                            cameraIndex = i;
-                            break;
-                        }
-                    }
-
-                    if (cameraIndex != -1) {
-                        launchGallery();
-                    } else {
-                        launchCamera();
-                    }
-                }
-            } else {
-                dismissAllowingStateLoss();
-
-                if (grantResults.length > 1)
-                    Keep.with(getActivity()).askedForPermission();
-            }
-        }
-    }
-
-
-   /* public static void forceDismiss(FragmentManager fm) {
-        Fragment fragment = fm.findFragmentByTag(PickImageDialog.DIALOG_FRAGMENT_TAG);
-
-        if (fragment != null) {
-            DialogFragment dialog = (PickImageDialog) fragment;
-
-            if (dialog.isVisible())
-                dialog.dismiss();
-        }
-    }*/
-
-
 }
 
 

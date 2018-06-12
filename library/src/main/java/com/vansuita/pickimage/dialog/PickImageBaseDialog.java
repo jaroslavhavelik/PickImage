@@ -1,10 +1,12 @@
 package com.vansuita.pickimage.dialog;
 
+import android.Manifest;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.widget.CardView;
@@ -27,12 +29,15 @@ import com.vansuita.pickimage.listeners.IPickResult;
 import com.vansuita.pickimage.resolver.IntentResolver;
 import com.vansuita.pickimage.util.Util;
 
+import permissions.dispatcher.NeedsPermission;
+import permissions.dispatcher.RuntimePermissions;
+
 import static com.vansuita.pickimage.R.layout.dialog;
 
 /**
  * Created by jrvansuita on 08/02/17.
  */
-
+@RuntimePermissions
 public abstract class PickImageBaseDialog extends DialogFragment implements IPickClick {
 
     protected static final String SETUP_TAG = "SETUP_TAG";
@@ -154,18 +159,18 @@ public abstract class PickImageBaseDialog extends DialogFragment implements IPic
     }
 
     private void onBindViewsHolders(View v) {
-        card = (CardView) v.findViewById(R.id.card);
+        card = v.findViewById(R.id.card);
         vFirstLayer = v.findViewById(R.id.first_layer);
         vSecondLayer = v.findViewById(R.id.second_layer);
     }
 
     private void onBindViews(View v) {
-        llButtons = (LinearLayout) v.findViewById(R.id.buttons_holder);
-        tvTitle = (TextView) v.findViewById(R.id.title);
-        tvCamera = (TextView) v.findViewById(R.id.camera);
-        tvGallery = (TextView) v.findViewById(R.id.gallery);
-        tvCancel = (TextView) v.findViewById(R.id.cancel);
-        tvProgress = (TextView) v.findViewById(R.id.loading_text);
+        llButtons = v.findViewById(R.id.buttons_holder);
+        tvTitle = v.findViewById(R.id.title);
+        tvCamera = v.findViewById(R.id.camera);
+        tvGallery = v.findViewById(R.id.gallery);
+        tvCancel = v.findViewById(R.id.cancel);
+        tvProgress = v.findViewById(R.id.loading_text);
     }
 
 
@@ -248,15 +253,14 @@ public abstract class PickImageBaseDialog extends DialogFragment implements IPic
         Util.gone(vSecondLayer, !show);
     }
 
-
+    @NeedsPermission({Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE})
     protected void launchCamera() {
-        if (resolver.requestCameraPermissions(this))
-            resolver.launchCamera(this);
+        resolver.launchCamera(this);
     }
 
+    @NeedsPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
     protected void launchGallery() {
-        if (resolver.requestGalleryPermissions(this))
-            resolver.launchGallery(this);
+        resolver.launchGallery(this);
     }
 
     protected boolean launchSystemDialog() {
@@ -334,5 +338,11 @@ public abstract class PickImageBaseDialog extends DialogFragment implements IPic
 
             dismissAllowingStateLoss();
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(final int requestCode, @NonNull final String[] permissions, @NonNull final int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        PickImageBaseDialogPermissionsDispatcher.onRequestPermissionsResult(this, requestCode, grantResults);
     }
 }
